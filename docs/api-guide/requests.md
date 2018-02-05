@@ -5,14 +5,20 @@ source: request.py
 > If you're doing REST-based web service stuff ... you should ignore request.POST.
 >
 > &mdash; Malcom Tredinnick, [Django developers group][cite]
+>
+> 如果你想基于 REST 来开发 web 服务，那么你应该忽略 request.POST 。
 
 REST framework's `Request` class extends the standard `HttpRequest`, adding support for REST framework's flexible request parsing and request authentication.
+
+REST framework 的`Request`扩展了 Django 的`HttpRequest`，并且支持灵活的请求解析与请求认证。
 
 ---
 
 # Request parsing
 
 REST framework's Request objects provide flexible request parsing that allows you to treat requests with JSON data or other media types in the same way that you would normally deal with form data.
+
+REST framework 的 Request Objects 提供了灵活的请求解析，它能够让你使用 JSON 数据格式或者其他媒体类型处理请求的方式和你之前处理表单数据的方式一样简单。
 
 ## .data
 
@@ -24,11 +30,21 @@ REST framework's Request objects provide flexible request parsing that allows yo
 
 For more details see the [parsers documentation].
 
+`request.data`返回的结果是经过解析的请求体。它和 Django 中的`request.POST` 和`request.FILES` 属性一样，但是要注意以下几点：
+
+* `request.data`包括所有解析的内容，包括文件和非文件的输入；
+* `request.data`可以解析除`POST`以外的其他HTTP方法的内容，也就是说你可以通过`request.data`访问`PUT`和`PATCH` 的请求内容；
+* `request.data`支持请求的灵活解析，而不仅仅是支持处理表单数据。比如说你在处理传入的JSON数据时的方式可以像你处理传入的表单数据的方式一样。
+
 ## .query_params
 
 `request.query_params` is a more correctly named synonym for `request.GET`.
 
+相对于 `request.GET`来说，`request.query_params`可能是更加准确的表述。
+
 For clarity inside your code, we recommend using `request.query_params` instead of the Django's standard `request.GET`. Doing so will help keep your codebase more correct and obvious - any HTTP method type may include query parameters, not just `GET` requests.
+
+为了让你的
 
 ## .parsers
 
