@@ -3,8 +3,8 @@ source: serializers.py
 # Serializers
 
 > Expanding the usefulness of the serializers is something that we would
-like to address.  However, it's not a trivial problem, and it
-will take some serious design work.
+> like to address.  However, it's not a trivial problem, and it
+> will take some serious design work.
 >
 > &mdash; Russell Keith-Magee, [Django users group][cite]
 
@@ -23,7 +23,7 @@ Let's start by creating a simple object we can use for example purposes:
             self.email = email
             self.content = content
             self.created = created or datetime.now()
-
+    
     comment = Comment(email='leila@example.com', content='foo bar')
 
 We'll declare a serializer that we can use to serialize and deserialize data that corresponds to `Comment` objects.
@@ -59,7 +59,7 @@ Deserialization is similar. First we parse a stream into Python native datatypes
 
     from django.utils.six import BytesIO
     from rest_framework.parsers import JSONParser
-
+    
     stream = BytesIO(json)
     data = JSONParser().parse(stream)
 
@@ -79,10 +79,10 @@ If we want to be able to return complete object instances based on the validated
         email = serializers.EmailField()
         content = serializers.CharField(max_length=200)
         created = serializers.DateTimeField()
-
+    
         def create(self, validated_data):
             return Comment(**validated_data)
-
+    
         def update(self, instance, validated_data):
             instance.email = validated_data.get('email', instance.email)
             instance.content = validated_data.get('content', instance.content)
@@ -93,7 +93,7 @@ If your object instances correspond to Django models you'll also want to ensure 
 
         def create(self, validated_data):
             return Comment.objects.create(**validated_data)
-
+    
         def update(self, instance, validated_data):
             instance.email = validated_data.get('email', instance.email)
             instance.content = validated_data.get('content', instance.content)
@@ -109,7 +109,7 @@ Calling `.save()` will either create a new instance, or update an existing insta
 
     # .save() will create a new instance.
     serializer = CommentSerializer(data=data)
-
+    
     # .save() will update the existing `comment` instance.
     serializer = CommentSerializer(comment, data=data)
 
@@ -136,7 +136,7 @@ For example:
     class ContactForm(serializers.Serializer):
         email = serializers.EmailField()
         message = serializers.CharField()
-
+    
         def save(self):
             email = self.validated_data['email']
             message = self.validated_data['message']
@@ -180,7 +180,7 @@ Your `validate_<field_name>` methods should return the validated value or raise 
     class BlogPostSerializer(serializers.Serializer):
         title = serializers.CharField(max_length=100)
         content = serializers.CharField()
-
+    
         def validate_title(self, value):
             """
             Check that the blog post is about Django.
@@ -205,7 +205,7 @@ To do any other validation that requires access to multiple fields, add a method
         description = serializers.CharField(max_length=100)
         start = serializers.DateTimeField()
         finish = serializers.DateTimeField()
-
+    
         def validate(self, data):
             """
             Check that the start is before the stop.
@@ -221,7 +221,7 @@ Individual fields on a serializer can include validators, by declaring them on t
     def multiple_of_ten(value):
         if value % 10 != 0:
             raise serializers.ValidationError('Not a multiple of ten')
-
+    
     class GameRecord(serializers.Serializer):
         score = IntegerField(validators=[multiple_of_ten])
         ...
@@ -232,7 +232,7 @@ Serializer classes can also include reusable validators that are applied to the 
         name = serializers.CharField()
         room_number = serializers.IntegerField(choices=[101, 102, 103, 201])
         date = serializers.DateField()
-
+    
         class Meta:
             # Each room only has one event per day.
             validators = UniqueTogetherValidator(
@@ -264,7 +264,7 @@ The `Serializer` class is itself a type of `Field`, and can be used to represent
     class UserSerializer(serializers.Serializer):
         email = serializers.EmailField()
         username = serializers.CharField(max_length=100)
-
+    
     class CommentSerializer(serializers.Serializer):
         user = UserSerializer()
         content = serializers.CharField(max_length=200)
@@ -305,11 +305,11 @@ The following example demonstrates how you might handle creating a user with a n
 
     class UserSerializer(serializers.ModelSerializer):
         profile = ProfileSerializer()
-
+    
         class Meta:
             model = User
             fields = ('username', 'email', 'profile')
-
+    
         def create(self, validated_data):
             profile_data = validated_data.pop('profile')
             user = User.objects.create(**validated_data)
@@ -333,11 +333,11 @@ Here's an example for an `.update()` method on our previous `UserSerializer` cla
             # always set, the follow could raise a `DoesNotExist`, which
             # would need to be handled.
             profile = instance.profile
-
+    
             instance.username = validated_data.get('username', instance.username)
             instance.email = validated_data.get('email', instance.email)
             instance.save()
-
+    
             profile.is_premium_member = profile_data.get(
                 'is_premium_member',
                 profile.is_premium_member
@@ -347,7 +347,7 @@ Here's an example for an `.update()` method on our previous `UserSerializer` cla
                 profile.has_support_contract
              )
             profile.save()
-
+    
             return instance
 
 Because the behavior of nested creates and updates can be ambiguous, and may require complex dependencies between related models, REST framework 3 requires you to always write these methods explicitly. The default `ModelSerializer` `.create()` and `.update()` methods do not include support for writable nested representations.
@@ -362,7 +362,7 @@ For example, suppose we wanted to ensure that `User` instances and `Profile` ins
 
     class UserManager(models.Manager):
         ...
-
+    
         def create(self, username, email, is_premium_member=False, has_support_contract=False):
             user = User(username=username, email=email)
             user.save()
@@ -480,6 +480,8 @@ For example:
 
 You can set the `exclude` attribute to a list of fields to be excluded from the serializer.
 
+您可以将exclude属性设置为从序列化程序中排除的字段列表。
+
 For example:
 
     class AccountSerializer(serializers.ModelSerializer):
@@ -516,7 +518,7 @@ You can add extra fields to a `ModelSerializer` or override the default fields b
     class AccountSerializer(serializers.ModelSerializer):
         url = serializers.CharField(source='get_absolute_url', read_only=True)
         groups = serializers.PrimaryKeyRelatedField(many=True)
-
+    
         class Meta:
             model = Account
 
@@ -555,6 +557,8 @@ Please review the [Validators Documentation](/api-guide/validators/) for details
 
 There is also a shortcut allowing you to specify arbitrary additional keyword arguments on fields, using the `extra_kwargs` option. As in the case of `read_only_fields`, this means you do not need to explicitly declare the field on the serializer.
 
+还有一个快捷方式允许您使用extra_kwargs选项在字段上指定任意附加关键字参数。 与read_only_fields的情况一样，这意味着您不需要在序列化程序中显式声明该字段。
+
 This option is a dictionary, mapping field names to a dictionary of keyword arguments. For example:
 
     class CreateUserSerializer(serializers.ModelSerializer):
@@ -562,7 +566,7 @@ This option is a dictionary, mapping field names to a dictionary of keyword argu
             model = User
             fields = ('email', 'username', 'password')
             extra_kwargs = {'password': {'write_only': True}}
-
+    
         def create(self, validated_data):
             user = User(
                 email=validated_data['email'],
@@ -719,7 +723,7 @@ Alternatively you can set the fields on the serializer explicitly. For example:
             many=True,
             read_only=True
         )
-
+    
         class Meta:
             model = Account
             fields = ('url', 'account_name', 'users', 'created')
@@ -739,6 +743,8 @@ The name of the URL field defaults to 'url'.  You can override this globally, by
 # ListSerializer
 
 The `ListSerializer` class provides the behavior for serializing and validating multiple objects at once. You won't *typically* need to use `ListSerializer` directly, but should instead simply pass `many=True` when instantiating a serializer.
+
+ListSerializer类提供了一次序列化和验证多个对象的行为。 您通常不需要直接使用ListSerializer，而应该在实例化序列化程序时简单地传递many = True。
 
 When a serializer is instantiated and `many=True` is passed, a `ListSerializer` instance will be created. The serializer class then becomes a child of the parent `ListSerializer`
 
@@ -761,7 +767,7 @@ For example:
 
     class CustomListSerializer(serializers.ListSerializer):
         ...
-
+    
     class CustomSerializer(serializers.Serializer):
         ...
         class Meta:
@@ -777,7 +783,7 @@ For example:
         def create(self, validated_data):
             books = [Book(**item) for item in validated_data]
             return Book.objects.bulk_create(books)
-
+    
     class BookSerializer(serializers.Serializer):
         ...
         class Meta:
@@ -803,7 +809,7 @@ Here's an example of how you might choose to implement multiple updates:
             # Maps for id->instance and id->data item.
             book_mapping = {book.id: book for book in instance}
             data_mapping = {item['id']: item for item in validated_data}
-
+    
             # Perform creations and updates.
             ret = []
             for book_id, data in data_mapping.items():
@@ -812,20 +818,20 @@ Here's an example of how you might choose to implement multiple updates:
                     ret.append(self.child.create(data))
                 else:
                     ret.append(self.child.update(book, data))
-
+    
             # Perform deletions.
             for book_id, book in book_mapping.items():
                 if book_id not in data_mapping:
                     book.delete()
-
+    
             return ret
-
+    
     class BookSerializer(serializers.Serializer):
         # We need to identify elements in the list using their primary key,
         # so use a writable field here, rather than the default which would be read-only.
         id = serializers.IntegerField()
         ...
-
+    
         class Meta:
             list_serializer_class = BookListSerializer
 
@@ -894,7 +900,7 @@ We can now use this class to serialize single `HighScore` instances:
     def high_score(request, pk):
         instance = HighScore.objects.get(pk=pk)
         serializer = HighScoreSerializer(instance)
-	    return Response(serializer.data)
+        return Response(serializer.data)
 
 Or use it to serialize multiple instances:
 
@@ -902,7 +908,7 @@ Or use it to serialize multiple instances:
     def all_high_scores(request):
         queryset = HighScore.objects.order_by('-score')
         serializer = HighScoreSerializer(queryset, many=True)
-	    return Response(serializer.data)
+        return Response(serializer.data)
 
 ##### Read-write `BaseSerializer` classes
 
@@ -918,7 +924,7 @@ Here's a complete example of our previous `HighScoreSerializer`, that's been upd
         def to_internal_value(self, data):
             score = data.get('score')
             player_name = data.get('player_name')
-
+    
             # Perform the data validation.
             if not score:
                 raise ValidationError({
@@ -932,20 +938,20 @@ Here's a complete example of our previous `HighScoreSerializer`, that's been upd
                 raise ValidationError({
                     'player_name': 'May not be more than 10 characters.'
                 })
-
-			# Return the validated values. This will be available as
-			# the `.validated_data` property.
+    
+    		# Return the validated values. This will be available as
+    		# the `.validated_data` property.
             return {
                 'score': int(score),
                 'player_name': player_name
             }
-
+    
         def to_representation(self, obj):
             return {
                 'score': obj.score,
                 'player_name': obj.player_name
             }
-
+    
         def create(self, validated_data):
             return HighScore.objects.create(**validated_data)
 
@@ -1021,10 +1027,10 @@ Similar to Django forms, you can extend and reuse serializers through inheritanc
 
     class MyBaseSerializer(Serializer):
         my_field = serializers.CharField()
-
+    
         def validate_my_field(self):
             ...
-
+    
     class MySerializer(MyBaseSerializer):
         ...
 
@@ -1043,7 +1049,7 @@ Additionally, the following caveats apply to serializer inheritance:
 
         class MyBaseSerializer(ModelSerializer):
             my_field = serializers.CharField()
-
+        
         class MySerializer(MyBaseSerializer):
             my_field = None
 
@@ -1064,14 +1070,14 @@ For example, if you wanted to be able to set which fields should be used by a se
         A ModelSerializer that takes an additional `fields` argument that
         controls which fields should be displayed.
         """
-
+    
         def __init__(self, *args, **kwargs):
             # Don't pass the 'fields' arg up to the superclass
             fields = kwargs.pop('fields', None)
-
+    
             # Instantiate the superclass normally
             super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)
-
+    
             if fields is not None:
                 # Drop any fields that are not specified in the `fields` argument.
                 allowed = set(fields)

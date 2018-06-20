@@ -64,7 +64,7 @@ If no class authenticates, `request.user` will be set to an instance of `django.
 
 The value of `request.user` and `request.auth` for unauthenticated requests can be modified using the `UNAUTHENTICATED_USER` and `UNAUTHENTICATED_TOKEN` settings.
 
-可以使用`UNAUTHENTICATED_USER`和`UNAUTHENTICATED_TOKEN`设置修改未经身份验证的请求的`request.user`和`request.auth`的值。
+可以使用`UNAUTHENTICATED_USER`和`UNAUTHENTICATED_TOKEN`修改未经身份验证的`request`的`request.user`和`request.auth`的值。
 
 ## Setting the authentication scheme
 
