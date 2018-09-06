@@ -22,18 +22,22 @@ By default, versioning is not enabled, and `request.version` will always return 
 
 How you vary the API behavior is up to you, but one example you might typically want is to switch to a different serialization style in a newer version. For example:
 
-    def get_serializer_class(self):
-        if self.request.version == 'v1':
-            return AccountSerializerVersion1
-        return AccountSerializer
+```python
+def get_serializer_class(self):
+    if self.request.version == 'v1':
+        return AccountSerializerVersion1
+    return AccountSerializer
+```
 
 #### Reversing URLs for versioned APIs
 
 The `reverse` function included by REST framework ties in with the versioning scheme. You need to make sure to include the current `request` as a keyword argument, like so.
 
-    from rest_framework.reverse import reverse
+```python
+from rest_framework.reverse import reverse
 
-    reverse('bookings-list', request=request)
+reverse('bookings-list', request=request)
+```
 
 The above function will apply any URL transformations appropriate to the request version. For example:
 
@@ -44,10 +48,12 @@ The above function will apply any URL transformations appropriate to the request
 
 When using hyperlinked serialization styles together with a URL based versioning scheme make sure to include the request as context to the serializer.
 
-    def get(self, request):
-        queryset = Booking.objects.all()
-        serializer = BookingsSerializer(queryset, many=True, context={'request': request})
-        return Response({'all_bookings': serializer.data})
+```python
+def get(self, request):
+    queryset = Booking.objects.all()
+    serializer = BookingsSerializer(queryset, many=True, context={'request': request})
+    return Response({'all_bookings': serializer.data})
+```
 
 Doing so will allow any returned URLs to include the appropriate versioning.
 
@@ -55,16 +61,20 @@ Doing so will allow any returned URLs to include the appropriate versioning.
 
 The versioning scheme is defined by the `DEFAULT_VERSIONING_CLASS` settings key.
 
-    REST_FRAMEWORK = {
-        'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning'
-    }
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning'
+}
+```
 
 Unless it is explicitly set, the value for `DEFAULT_VERSIONING_CLASS` will be `None`. In this case the `request.version` attribute will always return `None`.
 
 You can also set the versioning scheme on an individual view. Typically you won't need to do this, as it makes more sense to have a single versioning scheme used globally. If you do need to do so, use the `versioning_class` attribute.
 
-    class ProfileList(APIView):
-        versioning_class = versioning.QueryParameterVersioning
+```python
+class ProfileList(APIView):
+    versioning_class = versioning.QueryParameterVersioning
+```
 
 #### Other versioning settings
 
@@ -76,16 +86,18 @@ The following settings keys are also used to control versioning:
 
 You can also set your versioning class plus those three values on a per-view or a per-viewset basis by defining your own versioning scheme and using the `default_version`, `allowed_versions` and `version_param` class variables. For example, if you want to use `URLPathVersioning`:
 
-    from rest_framework.versioning import URLPathVersioning
-    from rest_framework.views import APIView
+```python
+from rest_framework.versioning import URLPathVersioning
+from rest_framework.views import APIView
 
-    class ExampleVersioning(URLPathVersioning):
-        default_version = ...
-        allowed_versions = ...
-        version_param = ...
+class ExampleVersioning(URLPathVersioning):
+    default_version = ...
+    allowed_versions = ...
+    version_param = ...
 
-    class ExampleView(APIVIew):
-        versioning_class = ExampleVersioning
+class ExampleView(APIVIew):
+    versioning_class = ExampleVersioning
+```
 
 ---
 
@@ -109,8 +121,10 @@ Versioning based on accept headers is [generally considered][klabnik-guidelines]
 
 Strictly speaking the `json` media type is not specified as [including additional parameters][json-parameters]. If you are building a well-specified public API you might consider using a [vendor media type][vendor-media-type]. To do so, configure your renderers to use a JSON based renderer with a custom media type:
 
-    class BookingsAPIRenderer(JSONRenderer):
-        media_type = 'application/vnd.megacorp.bookings+json'
+```python
+class BookingsAPIRenderer(JSONRenderer):
+    media_type = 'application/vnd.megacorp.bookings+json'
+```
 
 Your client requests would now look like this:
 
@@ -128,18 +142,20 @@ This scheme requires the client to specify the version as part of the URL path.
 
 Your URL conf must include a pattern that matches the version with a `'version'` keyword argument, so that this information is available to the versioning scheme.
 
-    urlpatterns = [
-        url(
-            r'^(?P<version>(v1|v2))/bookings/$',
-            bookings_list,
-            name='bookings-list'
-        ),
-        url(
-            r'^(?P<version>(v1|v2))/bookings/(?P<pk>[0-9]+)/$',
-            bookings_detail,
-            name='bookings-detail'
-        )
-    ]
+```python
+urlpatterns = [
+    url(
+        r'^(?P<version>(v1|v2))/bookings/$',
+        bookings_list,
+        name='bookings-list'
+    ),
+    url(
+        r'^(?P<version>(v1|v2))/bookings/(?P<pk>[0-9]+)/$',
+        bookings_detail,
+        name='bookings-detail'
+    )
+]
+```
 
 ## NamespaceVersioning
 
@@ -153,17 +169,19 @@ With this scheme the `request.version` attribute is determined based on the `nam
 
 In the following example we're giving a set of views two different possible URL prefixes, each under a different namespace:
 
-    # bookings/urls.py
-    urlpatterns = [
-        url(r'^$', bookings_list, name='bookings-list'),
-        url(r'^(?P<pk>[0-9]+)/$', bookings_detail, name='bookings-detail')
-    ]
+```python
+# bookings/urls.py
+urlpatterns = [
+    url(r'^$', bookings_list, name='bookings-list'),
+    url(r'^(?P<pk>[0-9]+)/$', bookings_detail, name='bookings-detail')
+]
 
-    # urls.py
-    urlpatterns = [
-        url(r'^v1/bookings/', include('bookings.urls', namespace='v1')),
-        url(r'^v2/bookings/', include('bookings.urls', namespace='v2'))
-    ]
+# urls.py
+urlpatterns = [
+    url(r'^v1/bookings/', include('bookings.urls', namespace='v1')),
+    url(r'^v2/bookings/', include('bookings.urls', namespace='v2'))
+]
+```
 
 Both `URLPathVersioning` and `NamespaceVersioning` are reasonable if you just need a simple versioning scheme. The `URLPathVersioning` approach might be better suitable for small ad-hoc projects, and the `NamespaceVersioning` is probably easier to manage for larger projects.
 
@@ -205,9 +223,11 @@ To implement a custom versioning scheme, subclass `BaseVersioning` and override 
 
 The following example uses a custom `X-API-Version` header to determine the requested version.
 
-    class XAPIVersionScheme(versioning.BaseVersioning):
-        def determine_version(self, request, *args, **kwargs):
-            return request.META.get('HTTP_X_API_VERSION', None)
+```python
+class XAPIVersionScheme(versioning.BaseVersioning):
+    def determine_version(self, request, *args, **kwargs):
+        return request.META.get('HTTP_X_API_VERSION', None)
+```
 
 If your versioning scheme is based on the request URL, you will also want to alter how versioned URLs are determined. In order to do so you should override the `.reverse()` method on the class. See the source code for examples.
 
